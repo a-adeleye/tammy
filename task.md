@@ -1,7 +1,7 @@
 You are an expert Flutter developer and speech-therapy-informed UX designer.
 
 Your task:  
-Build a COMPLETE Flutter app for Android/iOS that helps a young child (3–6 years old) move from single words to simple sentences. The app is used ONLY by the child (no onboarding, no login, no settings, no consent screens). When the app opens, it goes straight into the main “games.”
+Build a COMPLETE Flutter app for Android/iOS that helps a young child (3–6 years old) move from single words to simple sentences. The app is used ONLY by the child (no onboarding, no login, no settings, no consent screens). When the app opens, it goes straight into the main “games.”. The game is by default in landscape mode.
 
 ==================================================
 HIGH-LEVEL REQUIREMENTS
