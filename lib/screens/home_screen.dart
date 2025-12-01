@@ -1,11 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'action_phrases_screen.dart';
-import 'objects_screen.dart';
-import 'stories_list_screen.dart';
-import 'affirmations_screen.dart';
-import 'verses_screen.dart';
-import 'session_screen.dart';
+
+import '../models/game.dart';
 import '../services/audio_service.dart';
+import '../services/database_helper.dart';
+import 'admin/admin_login_screen.dart';
+import 'generic_game_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,10 +16,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<Game>> _gamesFuture;
+
   @override
   void initState() {
     super.initState();
     _initAudio();
+    _refreshGames();
+  }
+
+  void _refreshGames() {
+    setState(() {
+      _gamesFuture = DatabaseHelper.instance.readAllGames();
+    });
   }
 
   void _initAudio() async {
@@ -30,12 +40,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Let's Talk!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Let's Talk!",
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.lightBlue[100],
         actions: [
           IconButton(
-            icon: Icon(AudioService.instance.isMuted ? Icons.volume_off : Icons.volume_up),
+            icon: const Icon(Icons.settings),
+            onPressed: () async {
+              await _navigateTo(context, const AdminLoginScreen());
+              _refreshGames(); // Refresh on return from admin
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              AudioService.instance.isMuted
+                  ? Icons.volume_off
+                  : Icons.volume_up,
+            ),
             onPressed: () {
               setState(() {
                 AudioService.instance.toggleMute();
@@ -46,54 +70,48 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                _navigateTo(context, const SessionScreen());
+        child: FutureBuilder<List<Game>>(
+          future: _gamesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text('No games configured. Ask an admin to add games!'),
+              );
+            }
+
+            final games = snapshot.data!;
+            return ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: games.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 16),
+              itemBuilder: (context, index) {
+                final game = games[index];
+                return _buildGameCard(context, game);
               },
-              icon: const Icon(Icons.play_arrow, size: 32),
-              label: const Text("Play All", style: TextStyle(fontSize: 24)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[300],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _buildModeCard(context, "I want...", Colors.orange[200]!, const ActionPhrasesScreen()),
-                  const SizedBox(width: 16),
-                  _buildModeCard(context, "Things at home", Colors.purple[200]!, const ObjectsScreen()),
-                  const SizedBox(width: 16),
-                  _buildModeCard(context, "Stories", Colors.blue[200]!, const StoriesListScreen()),
-                  const SizedBox(width: 16),
-                  _buildModeCard(context, "I am...", Colors.pink[200]!, const AffirmationsScreen()),
-                  const SizedBox(width: 16),
-                  _buildModeCard(context, "Bible Verses", Colors.yellow[200]!, const VersesScreen()),
-                ],
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildModeCard(BuildContext context, String title, Color color, Widget destination) {
+  Widget _buildGameCard(BuildContext context, Game game) {
     return GestureDetector(
       onTap: () {
-        _navigateTo(context, destination);
+        _navigateTo(context, GenericGameScreen(game: game));
       },
+
       child: Container(
-        width: 250, // Fixed width for horizontal cards
+        width: 250,
         decoration: BoxDecoration(
-          color: color,
+          color:
+              game.iconPath.isNotEmpty
+                  ? Colors.transparent
+                  : Color(game.colorValue),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -103,22 +121,36 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        child: Center(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child:
+              game.iconPath.isNotEmpty
+                  ? Image.file(
+                    File(game.iconPath),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  )
+                  : Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        game.name,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
         ),
       ),
     );
   }
 
-  void _navigateTo(BuildContext context, Widget destination) async {
+  Future<void> _navigateTo(BuildContext context, Widget destination) async {
     await AudioService.instance.stopMusic();
     if (context.mounted) {
       await Navigator.push(
