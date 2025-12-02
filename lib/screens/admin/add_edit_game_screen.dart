@@ -1,9 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+
 import '../../models/game.dart';
 import '../../services/database_helper.dart';
 
@@ -29,7 +31,8 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.game?.name ?? '');
-    _selectedColor = widget.game != null ? Color(widget.game!.colorValue) : Colors.blue;
+    _selectedColor =
+        widget.game != null ? Color(widget.game!.colorValue) : Colors.blue;
     _selectedType = widget.game?.type ?? 'video';
     if (widget.game != null && widget.game!.iconPath.isNotEmpty) {
       _iconFile = File(widget.game!.iconPath);
@@ -48,9 +51,9 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
   Future<void> _saveGame() async {
     if (!_formKey.currentState!.validate()) return;
     if (_iconFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an icon')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select an icon')));
       return;
     }
 
@@ -60,11 +63,13 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
 
     try {
       String iconPath = _iconFile!.path;
-      // If it's a new file (not already in app docs), copy it
       final appDir = await getApplicationDocumentsDirectory();
       if (!path.isWithin(appDir.path, iconPath)) {
-        final fileName = 'icon_${DateTime.now().millisecondsSinceEpoch}${path.extension(iconPath)}';
-        final savedImage = await _iconFile!.copy(path.join(appDir.path, fileName));
+        final fileName =
+            'icon_${DateTime.now().millisecondsSinceEpoch}${path.extension(iconPath)}';
+        final savedImage = await _iconFile!.copy(
+          path.join(appDir.path, fileName),
+        );
         iconPath = savedImage.path;
       }
 
@@ -87,9 +92,9 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving game: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving game: $e')));
       }
     } finally {
       if (mounted) {
@@ -107,7 +112,7 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
         title: Text(widget.game == null ? 'Add Game' : 'Edit Game'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -116,7 +121,11 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Game Name'),
-                validator: (value) => value == null || value.isEmpty ? 'Please enter a name' : null,
+                validator:
+                    (value) =>
+                        value == null || value.isEmpty
+                            ? 'Please enter a name'
+                            : null,
               ),
               const SizedBox(height: 20),
               ListTile(
@@ -125,20 +134,21 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Pick a color'),
-                      content: SingleChildScrollView(
-                        child: BlockPicker(
-                          pickerColor: _selectedColor,
-                          onColorChanged: (color) {
-                            setState(() {
-                              _selectedColor = color;
-                            });
-                            Navigator.pop(context);
-                          },
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Pick a color'),
+                          content: SingleChildScrollView(
+                            child: BlockPicker(
+                              pickerColor: _selectedColor,
+                              onColorChanged: (color) {
+                                setState(() {
+                                  _selectedColor = color;
+                                });
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
                   );
                 },
               ),
@@ -147,8 +157,14 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                 value: _selectedType,
                 decoration: const InputDecoration(labelText: 'Game Type'),
                 items: const [
-                  DropdownMenuItem(value: 'video', child: Text('Video (Flashcard + Video)')),
-                  DropdownMenuItem(value: 'picture', child: Text('Picture (Flashcard + TTS)')),
+                  DropdownMenuItem(
+                    value: 'video',
+                    child: Text('Video (Flashcard + Video)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'picture',
+                    child: Text('Picture (Flashcard + TTS)'),
+                  ),
                 ],
                 onChanged: (value) {
                   if (value != null) {
@@ -158,15 +174,30 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                   }
                 },
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
               ElevatedButton.icon(
                 onPressed: _pickIcon,
-                icon: const Icon(Icons.image),
-                label: const Text('Select Icon'),
+                icon: const Icon(Icons.image, size: 20),
+                label: const Text(
+                  'Select Icon',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF4E8D6),
+                  foregroundColor: Colors.black87,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 20,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
               ),
               if (_iconFile != null) ...[
                 const SizedBox(height: 10),
-                Image.file(_iconFile!, height: 100, fit: BoxFit.contain),
+                Image.file(_iconFile!, height: 300, fit: BoxFit.contain),
               ],
               const SizedBox(height: 40),
               ElevatedButton(
@@ -176,9 +207,13 @@ class _AddEditGameScreenState extends State<AddEditGameScreen> {
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                 ),
-                child: _isSaving
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Game', style: TextStyle(fontSize: 18)),
+                child:
+                    _isSaving
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                          'Save Game',
+                          style: TextStyle(fontSize: 18),
+                        ),
               ),
             ],
           ),

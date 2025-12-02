@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/game.dart';
 import '../services/audio_service.dart';
@@ -21,6 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _initAudio();
     _refreshGames();
   }
@@ -45,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.lightBlue[100],
+        backgroundColor: const Color(0xFFF4E8D6),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -69,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(48.0),
         child: FutureBuilder<List<Game>>(
           future: _gamesFuture,
           builder: (context, snapshot) {

@@ -1,6 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:audioplayers/audioplayers.dart';
 
-class AudioService {
+class AudioService with WidgetsBindingObserver {
   AudioService._internal();
   static final AudioService instance = AudioService._internal();
 
@@ -10,9 +11,25 @@ class AudioService {
 
   bool get isMuted => _isMuted;
 
+  bool _isInitialized = false;
+
   Future<void> init() async {
+    if (_isInitialized) return;
+    WidgetsBinding.instance.addObserver(this);
     await _player.setReleaseMode(ReleaseMode.loop);
     await _player.setSource(AssetSource('audio/background-music.m4a'));
+    _isInitialized = true;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _player.pause();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_isPlaying && !_isMuted) {
+        _player.resume();
+      }
+    }
   }
 
   Future<void> playMusic() async {

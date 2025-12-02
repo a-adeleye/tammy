@@ -1,5 +1,8 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../models/game.dart';
 import '../../services/database_helper.dart';
 import 'add_edit_game_screen.dart';
@@ -18,7 +21,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     _refreshGames();
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
   }
 
   void _refreshGames() {
@@ -54,41 +67,95 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             itemBuilder: (context, index) {
               final game = games[index];
               return Card(
-                margin: const EdgeInsets.only(bottom: 16.0),
+                elevation: 3,
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                color: const Color(0xFFFDF8F0),
+                // subtle variant of your theme
                 child: ListTile(
-                  leading: game.iconPath.isNotEmpty
-                      ? Image.file(File(game.iconPath), width: 50, height: 50, fit: BoxFit.cover)
-                      : const Icon(Icons.gamepad),
-                  title: Text(game.name),
-                  subtitle: Text(game.type == 'video' ? 'Video Game' : 'Picture Game'),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child:
+                        game.iconPath.isNotEmpty
+                            ? Image.file(
+                              File(game.iconPath),
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            )
+                            : Container(
+                              width: 50,
+                              height: 50,
+                              alignment: Alignment.center,
+                              color: const Color(0xFFF4E8D6),
+                              child: const Icon(Icons.gamepad, size: 28),
+                            ),
+                  ),
+                  title: Text(
+                    game.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    game.type == 'video' ? 'Video Game' : 'Picture Game',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        tooltip: 'Edit',
+                        icon: const Icon(Icons.edit_outlined),
+                        color: Colors.blueGrey,
                         onPressed: () async {
                           await Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AddEditGameScreen(game: game)),
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => AddEditGameScreen(game: game),
+                            ),
                           );
                           _refreshGames();
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteGame(game.id!),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.green),
+                        tooltip: 'Configure',
+                        icon: const Icon(Icons.settings_outlined),
+                        color: Colors.green.shade700,
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ConfigureGameScreen(game: game)),
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => ConfigureGameScreen(game: game),
+                            ),
                           );
                         },
                       ),
+                      IconButton(
+                        tooltip: 'Delete',
+                        icon: const Icon(Icons.delete_outline),
+                        color: Colors.red.shade600,
+                        onPressed: () => _deleteGame(game.id!),
+                      ),
                     ],
                   ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ConfigureGameScreen(game: game),
+                      ),
+                    );
+                  },
                 ),
               );
             },
@@ -103,7 +170,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
           _refreshGames();
         },
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFFF4E8D6),
+        foregroundColor: Colors.black87,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }

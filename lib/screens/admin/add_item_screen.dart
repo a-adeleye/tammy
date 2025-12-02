@@ -1,14 +1,17 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+
 import '../../models/game.dart';
 import '../../models/game_item.dart';
 import '../../services/database_helper.dart';
 
 class AddItemScreen extends StatefulWidget {
   final Game game;
+
   const AddItemScreen({super.key, required this.game});
 
   @override
@@ -43,9 +46,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
   Future<void> _saveItem() async {
     bool isVideoRequired = widget.game.type == 'video';
 
-    if (_textController.text.isEmpty || _imageFile == null || (isVideoRequired && _videoFile == null)) {
+    if (_textController.text.isEmpty ||
+        _imageFile == null ||
+        (isVideoRequired && _videoFile == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill text, image${isVideoRequired ? ' and video' : ''}')),
+        SnackBar(
+          content: Text(
+            'Please fill text, image${isVideoRequired ? ' and video' : ''}',
+          ),
+        ),
       );
       return;
     }
@@ -56,15 +65,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final fileNameTimestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final fileNameTimestamp =
+          DateTime.now().millisecondsSinceEpoch.toString();
 
-      final imageFileName = 'img_$fileNameTimestamp${path.extension(_imageFile!.path)}';
-      final savedImage = await _imageFile!.copy(path.join(appDir.path, imageFileName));
+      final imageFileName =
+          'img_$fileNameTimestamp${path.extension(_imageFile!.path)}';
+      final savedImage = await _imageFile!.copy(
+        path.join(appDir.path, imageFileName),
+      );
 
       String videoPath = '';
       if (_videoFile != null) {
-        final videoFileName = 'vid_$fileNameTimestamp${path.extension(_videoFile!.path)}';
-        final savedVideo = await _videoFile!.copy(path.join(appDir.path, videoFileName));
+        final videoFileName =
+            'vid_$fileNameTimestamp${path.extension(_videoFile!.path)}';
+        final savedVideo = await _videoFile!.copy(
+          path.join(appDir.path, videoFileName),
+        );
         videoPath = savedVideo.path;
       }
 
@@ -82,9 +98,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving item: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving item: $e')));
       }
     } finally {
       if (mounted) {
@@ -100,7 +116,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Add New Item')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -114,8 +130,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: _pickImage,
-              icon: const Icon(Icons.image),
-              label: const Text('Select Flashcard Image'),
+              icon: const Icon(Icons.image, size: 22),
+              label: const Text(
+                'Select Flashcard Image',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF7AB8B0),
+                foregroundColor: Colors.black87,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 22,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
             ),
             if (_imageFile != null) ...[
               const SizedBox(height: 10),
@@ -125,12 +156,30 @@ class _AddItemScreenState extends State<AddItemScreen> {
             if (widget.game.type == 'video') ...[
               ElevatedButton.icon(
                 onPressed: _pickVideo,
-                icon: const Icon(Icons.videocam),
-                label: const Text('Select Video'),
+                icon: const Icon(Icons.videocam, size: 22),
+                label: const Text(
+                  'Select Video',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF9CA67C),
+                  foregroundColor: Colors.black87,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 22,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
               ),
               if (_videoFile != null) ...[
                 const SizedBox(height: 10),
-                const Text('Video selected', style: TextStyle(color: Colors.green)),
+                const Text(
+                  'Video selected',
+                  style: TextStyle(color: Colors.green),
+                ),
               ],
               const SizedBox(height: 40),
             ],
@@ -141,9 +190,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
               ),
-              child: _isSaving
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Save Item', style: TextStyle(fontSize: 18)),
+              child:
+                  _isSaving
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Save Item', style: TextStyle(fontSize: 18)),
             ),
           ],
         ),

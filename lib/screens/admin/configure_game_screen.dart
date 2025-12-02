@@ -1,5 +1,7 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import '../../models/game.dart';
 import '../../models/game_item.dart';
 import '../../services/database_helper.dart';
@@ -8,10 +10,7 @@ import 'add_item_screen.dart';
 class ConfigureGameScreen extends StatefulWidget {
   final Game game;
 
-  const ConfigureGameScreen({
-    super.key,
-    required this.game,
-  });
+  const ConfigureGameScreen({super.key, required this.game});
 
   @override
   State<ConfigureGameScreen> createState() => _ConfigureGameScreenState();
@@ -60,9 +59,15 @@ class _ConfigureGameScreenState extends State<ConfigureGameScreen> {
               return Card(
                 margin: const EdgeInsets.all(8.0),
                 child: ListTile(
-                  leading: item.imagePath.isNotEmpty
-                      ? Image.file(File(item.imagePath), width: 50, height: 50, fit: BoxFit.cover)
-                      : const Icon(Icons.image),
+                  leading:
+                      item.imagePath.isNotEmpty
+                          ? Image.file(
+                            File(item.imagePath),
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          )
+                          : const Icon(Icons.image),
                   title: Text(item.text),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
@@ -84,7 +89,11 @@ class _ConfigureGameScreenState extends State<ConfigureGameScreen> {
           );
           _refreshGameItems();
         },
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFFF4E8D6),
+        foregroundColor: Colors.black87,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }
