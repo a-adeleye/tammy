@@ -169,87 +169,44 @@ class _GenericGameScreenState extends State<GenericGameScreen> {
     return PopScope(
       canPop: !_isPlayingVideo,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(widget.game.name, style: const TextStyle(fontSize: 24)),
-          backgroundColor: backgroundColor,
-          automaticallyImplyLeading: !_isPlayingVideo,
-        ),
-        body: Column(
+        appBar: _isPlayingVideo
+            ? null
+            : AppBar(
+                title: Text(widget.game.name, style: const TextStyle(fontSize: 24)),
+                backgroundColor: backgroundColor,
+                automaticallyImplyLeading: true,
+              ),
+        body: Stack(
           children: [
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                physics: _isPlayingVideo ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
-                itemCount: _items.length,
-                onPageChanged: (index) {
-                  setState(() {
-                    _currentIndex = index;
-                    if (_isPlayingVideo) {
-                      _backToCard();
-                    }
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final item = _items[index];
-                  final isPlayingThis = _isPlayingVideo && _playingIndex == index;
-                  return Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        if (!isPlayingThis) {
-                           if (widget.game.type == 'video') {
-                             if (item.videoPath.isNotEmpty) {
-                               _playVideo(item.videoPath, index);
-                             }
-                           } else {
-                             SpeechService.instance.speak(item.text);
-                           }
-                        }
-                      },
-                        child: isPlayingThis ?
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                               border: Border.all(color: backgroundColor, width: 2),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(2, 2),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: AspectRatio(
-                                aspectRatio: _videoController!.value.aspectRatio,
-                                child: VideoPlayer(_videoController!),
-                              ))),
-                            if (_isVideoFinished)
-                              Container(
-                                color: Colors.black45,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.replay, size: 64, color: Colors.white),
-                                      onPressed: _replayVideo,
-                                    ),
-                                    const SizedBox(width: 40),
-                                    IconButton(
-                                      icon: const Icon(Icons.close, size: 64, color: Colors.white),
-                                      onPressed: _backToCard,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ) :
-                          Row(
+            Column(
+              children: [
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    physics: _isPlayingVideo ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
+                    itemCount: _items.length,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      final item = _items[index];
+                      return Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!_isPlayingVideo) {
+                              if (widget.game.type == 'video') {
+                                if (item.videoPath.isNotEmpty) {
+                                  _playVideo(item.videoPath, index);
+                                }
+                              } else {
+                                SpeechService.instance.speak(item.text);
+                              }
+                            }
+                          },
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               IconButton(
@@ -274,11 +231,48 @@ class _GenericGameScreenState extends State<GenericGameScreen> {
                               ),
                             ],
                           ),
-                    ),
-                  );
-                },
-              ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
+            if (_isPlayingVideo && _videoController != null && _videoController!.value.isInitialized)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Center(
+                        child: AspectRatio(
+                          aspectRatio: _videoController!.value.aspectRatio,
+                          child: VideoPlayer(_videoController!),
+                        ),
+                      ),
+                      if (_isVideoFinished)
+                        Container(
+                          color: Colors.black45,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.replay, size: 64, color: Colors.white),
+                                onPressed: _replayVideo,
+                              ),
+                              const SizedBox(width: 40),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 64, color: Colors.white),
+                                onPressed: _backToCard,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
